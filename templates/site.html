@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Montana Deer Districts</title>
+<meta name="description" content="Montana FWP deer harvest by hunting district, ranked by odds, effort and trend. Rebuilt each year from FWP harvest estimates.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2ea; --panel: #fffdf8; --ink: #1f2a22; --muted: #5d6a60; --line: #ddd6c6;
+    --accent: #2f5d3a; --accent-soft: #e3ecdf; --md: #a0522d; --wt: #2f5d3a;
+    --up: #2f7a3e; --down: #b23a2a; --warn-bg: #fbf1d6; --warn-ink: #6b5310;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151a16; --panel: #1d241f; --ink: #e9ece4; --muted: #9aa89d; --line: #313b33;
+      --accent: #8fc59a; --accent-soft: #24332a; --md: #e09a6c; --wt: #8fc59a;
+      --up: #8fc59a; --down: #ef8a7a; --warn-bg: #3a3218; --warn-ink: #f1d98a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px 48px; }
+  header { padding: 32px 0 20px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font-family: Fraunces, Georgia, serif; font-size: clamp(28px, 5vw, 42px); line-height: 1.1; margin: 6px 0 8px; }
+  h2 { font-family: Fraunces, Georgia, serif; font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); max-width: 680px; margin: 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 20px; }
+  .ctl label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  select, .seg button { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line);
+         border-radius: 8px; padding: 7px 10px; min-height: 38px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); font-weight: 600; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .card .k { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .card .k::first-letter { text-transform: uppercase; }
+  .card .v { font-family: Fraunces, Georgia, serif; font-size: 28px; font-weight: 700; margin-top: 2px; }
+  .card .d { font-size: 13px; color: var(--muted); }
+  .up { color: var(--up); } .down { color: var(--down); }
+  .grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+  .panel p.hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .note { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-bottom: 12px; }
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  th { text-align: right; font-size: 12px; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--accent-soft); }
+  tbody tr.sel { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+  .rank { color: var(--muted); }
+  .chartbox { position: relative; height: 240px; }
+  .stack > * + * { margin-top: 16px; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Hunting Team · Montana FWP harvest estimates</div>
+    <h1>Where Montana's deer get taken</h1>
+    <p class="sub">Every hunting district's deer harvest, hunter numbers and effort from FWP's yearly estimates.
+      Pick a species and year, sort by what matters to you, and tap a district to see its trend.</p>
+  </header>
+
+  <div class="controls">
+    <div class="ctl"><label>Species</label>
+      <div class="seg" id="species">
+        <button data-v="mule deer" aria-pressed="true">Mule deer</button>
+        <button data-v="whitetail" aria-pressed="false">Whitetail</button>
+      </div></div>
+    <div class="ctl"><label for="year">Year</label><select id="year"></select></div>
+    <div class="ctl"><label for="sort">Rank districts by</label>
+      <select id="sort">
+        <option value="perHunter">Best odds (harvest per hunter)</option>
+        <option value="daysPer">Fewest days per animal</option>
+        <option value="harvest">Most animals taken</option>
+        <option value="trend">Rising harvest (first vs latest year)</option>
+        <option value="hunter_days">Busiest (hunter days)</option>
+      </select></div>
+    <div class="ctl"><label for="region">FWP region</label>
+      <select id="region"><option value="">All regions</option></select></div>
+    <div class="ctl"><label for="minh">Min. hunters</label>
+      <select id="minh"><option value="0">Any</option><option value="100" selected>100+</option>
+        <option value="500">500+</option><option value="1000">1,000+</option></select></div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Top districts</h2>
+      <p class="hint" id="tablehint"></p>
+      <div id="note"></div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>#</th><th>District</th><th>Hunters</th><th>Harvest</th><th>Per hunter</th><th>Days / animal</th><th id="trendh">Trend</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </section>
+    <div class="stack">
+      <section class="panel">
+        <h2 id="dtitle">District</h2>
+        <p class="hint">Harvest by year, both species</p>
+        <div class="chartbox"><canvas id="dchart"></canvas></div>
+      </section>
+      <section class="panel">
+        <h2>Statewide harvest</h2>
+        <p class="hint">Total deer taken across all districts</p>
+        <div class="chartbox"><canvas id="schart"></canvas></div>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    Source: Montana Fish, Wildlife &amp; Parks harvest estimates (myfwp.mt.gov). FWP counts deer hunters per district,
+    not per species, so "per hunter" means animals of this species per deer hunter in the district.
+    FWP skipped the hunter survey in some years; those years show harvest only.
+    Built <span id="built"></span>.
+  </footer>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D = JSON.parse(document.getElementById("data").textContent);
+const rows = D.rows.map(r => ({district: r[0], species: r[1], year: r[2], hunters: r[3], hunter_days: r[4], harvest: r[5]}));
+const years = D.years.slice().sort((a, b) => b - a);
+const fmt = n => n == null ? "–" : Math.round(n).toLocaleString();
+const pct = n => n == null ? "–" : (n * 100).toFixed(0) + "%";
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const region = d => d[0];
+const hasEffort = y => rows.some(r => r.year === y && r.hunters);
+
+const state = { species: "mule deer", year: years.find(hasEffort) ?? years[0], sort: "perHunter", region: "", minh: 100, district: null };
+document.getElementById("built").textContent = D.built;
+document.getElementById("trendh").textContent = "Since " + D.years[0];
+
+// ---- controls ----
+const yearSel = document.getElementById("year");
+years.forEach(y => yearSel.add(new Option(y + (hasEffort(y) ? "" : " (harvest only)"), y)));
+yearSel.value = state.year;
+const regSel = document.getElementById("region");
+[...new Set(rows.map(r => region(r.district)))].sort().forEach(g => regSel.add(new Option("Region " + g, g)));
+
+document.querySelectorAll("#species button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#species button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  state.species = b.dataset.v; render();
+});
+yearSel.onchange = e => { state.year = +e.target.value; render(); };
+document.getElementById("sort").onchange = e => { state.sort = e.target.value; render(); };
+regSel.onchange = e => { state.region = e.target.value; state.district = null; render(); };
+document.getElementById("minh").onchange = e => { state.minh = +e.target.value; render(); };
+
+// ---- helpers ----
+function trendFor(district, species) {
+  const s = rows.filter(r => r.district === district && r.species === species).sort((a, b) => a.year - b.year);
+  if (s.length < 2 || !s[0].harvest) return null;
+  return (s[s.length - 1].harvest - s[0].harvest) / s[0].harvest;
+}
+function arrow(t) {
+  if (t == null) return "–";
+  const cls = t > 0.05 ? "up" : t < -0.05 ? "down" : "";
+  const sym = t > 0.05 ? "▲" : t < -0.05 ? "▼" : "■";
+  return `<span class="${cls}">${sym} ${Math.abs(t * 100).toFixed(0)}%</span>`;
+}
+
+// ---- render ----
+let dChart, sChart;
+function render() {
+  const effort = hasEffort(state.year);
+  let sort = state.sort;
+  const needsEffort = ["perHunter", "daysPer", "hunter_days"].includes(sort);
+  document.getElementById("note").innerHTML = (!effort && needsEffort)
+    ? `<div class="note">FWP didn't survey hunter numbers in ${state.year}, so this year is ranked by animals taken.</div>` : "";
+  if (!effort && needsEffort) sort = "harvest";
+
+  let list = rows.filter(r => r.species === state.species && r.year === state.year)
+    .filter(r => !state.region || region(r.district) === state.region)
+    .filter(r => !effort || (r.hunters || 0) >= state.minh)
+    .map(r => ({...r,
+      perHunter: r.hunters ? r.harvest / r.hunters : null,
+      daysPer: r.harvest && r.hunter_days ? r.hunter_days / r.harvest : null,
+      trend: trendFor(r.district, r.species)}));
+
+  const key = { perHunter: r => r.perHunter, daysPer: r => r.daysPer == null ? null : -r.daysPer,
+                harvest: r => r.harvest, trend: r => r.trend, hunter_days: r => r.hunter_days }[sort];
+  list.sort((a, b) => (key(b) ?? -Infinity) - (key(a) ?? -Infinity));
+
+  // cards
+  const inReg = r => !state.region || region(r.district) === state.region;
+  const all = rows.filter(r => r.species === state.species && r.year === state.year && inReg(r));
+  const prev = rows.filter(r => r.species === state.species && r.year === state.year - 1 && inReg(r));
+  const tot = all.reduce((s, r) => s + r.harvest, 0), ptot = prev.reduce((s, r) => s + r.harvest, 0);
+  const chg = ptot ? (tot - ptot) / ptot : null;
+  const top = list[0];
+  document.getElementById("cards").innerHTML = `
+    <div class="card"><div class="k">${state.species} taken ${state.region ? "in region " + state.region : "statewide"}, ${state.year}</div><div class="v">${fmt(tot)}</div>
+      <div class="d">${chg == null ? "&nbsp;" : arrow(chg) + " vs " + (state.year - 1)}</div></div>
+    <div class="card"><div class="k">Districts with harvest</div><div class="v">${all.filter(r => r.harvest > 0).length}</div>
+      <div class="d">${state.region ? "Showing region " + state.region : "All regions"}</div></div>
+    <div class="card"><div class="k">#1 by your ranking</div><div class="v">${top ? top.district : "–"}</div>
+      <div class="d">${top ? fmt(top.harvest) + " taken" + (top.perHunter ? " · " + pct(top.perHunter) + " per hunter" : "") : "&nbsp;"}</div></div>`;
+
+  // table
+  const shown = list.slice(0, 25);
+  document.getElementById("tablehint").textContent =
+    `${state.species[0].toUpperCase() + state.species.slice(1)}, ${state.year}. Showing ${shown.length} of ${list.length} districts. Tap a row for its trend.`;
+  if (!state.district || !list.some(r => r.district === state.district)) state.district = shown[0]?.district ?? null;
+  document.getElementById("rows").innerHTML = shown.map((r, i) => `
+    <tr data-d="${r.district}" class="${r.district === state.district ? "sel" : ""}">
+      <td class="rank">${i + 1}</td><td><strong>${r.district}</strong></td><td>${fmt(r.hunters)}</td><td>${fmt(r.harvest)}</td>
+      <td>${pct(r.perHunter)}</td><td>${r.daysPer == null ? "–" : r.daysPer.toFixed(1)}</td><td>${arrow(r.trend)}</td></tr>`).join("");
+  document.querySelectorAll("#rows tr").forEach(tr => tr.onclick = () => { state.district = tr.dataset.d; render(); });
+
+  drawDistrict(); drawState();
+}
+
+function lineOpts() {
+  Chart.defaults.color = css("--muted"); Chart.defaults.borderColor = css("--line");
+  Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+  return { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+    plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } },
+    scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString() } } } };
+}
+function series(filter) {
+  const ys = D.years;
+  return ["mule deer", "whitetail"].map(sp => ({
+    label: sp === "mule deer" ? "Mule deer" : "Whitetail",
+    data: ys.map(y => { const m = rows.filter(r => r.species === sp && r.year === y && filter(r));
+                        return m.length ? m.reduce((s, r) => s + r.harvest, 0) : null; }),
+    borderColor: css(sp === "mule deer" ? "--md" : "--wt"), backgroundColor: css(sp === "mule deer" ? "--md" : "--wt"),
+    borderWidth: sp === state.species ? 3 : 1.5, pointRadius: 3, tension: .25 }));
+}
+function drawDistrict() {
+  document.getElementById("dtitle").textContent = state.district ? "District " + state.district : "District";
+  dChart?.destroy();
+  if (!state.district || !window.Chart) return;
+  dChart = new Chart(document.getElementById("dchart"), { type: "line",
+    data: { labels: D.years, datasets: series(r => r.district === state.district) }, options: lineOpts() });
+}
+function drawState() {
+  sChart?.destroy();
+  if (!window.Chart) return;
+  sChart = new Chart(document.getElementById("schart"), { type: "line",
+    data: { labels: D.years, datasets: series(r => !state.region || region(r.district) === state.region) }, options: lineOpts() });
+}
+render();
+</script>
+</body>
+</html>

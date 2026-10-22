@@ -1,0 +1,10 @@
+# Secrets: your Anthropic API key lives here. Never upload it.
+.env
+
+# Your local Python install (each computer makes its own)
+.venv/
+__pycache__/
+*.pyc
+
+# Excel lock files
+~$*
