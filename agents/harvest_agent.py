@@ -101,8 +101,9 @@ def read_sheets(path: Path):
 
 def map_sheet(path: Path, sheet: str, rows: list) -> dict:
     """Work out the sheet's layout. Our own clean files skip Claude; anything else asks Claude."""
-    if rows and [c.strip().lower() for c in rows[0][:6]] == FIELDS:
-        return {"skip": False, "header_row": 0, "columns": {f: i for i, f in enumerate(FIELDS)},
+    head = [c.strip().lower() for c in rows[0]] if rows else []
+    if head[:6] == FIELDS:                       # our own clean files (fwp_fetch.py) skip Claude
+        return {"skip": False, "header_row": 0, "columns": {f: i for i, f in enumerate(head)},
                 "constants": {}}
     preview = "\n".join(f"row {i}: " + " | ".join(f"[{j}] {c}" for j, c in enumerate(r))
                         for i, r in enumerate(rows[:15]))
@@ -123,6 +124,7 @@ def extract_rows(sheet_rows: list, plan: dict, source: str):
             continue
         hunters, days, harvest = to_int(get("hunters")), to_int(get("hunter_days")), to_int(get("harvest"))
         rows.append({
+            "antlered": to_int(get("antlered")), "antlerless": to_int(get("antlerless")),
             "district": district, "species": species, "year": year,
             "hunters": hunters, "hunter_days": days, "harvest": harvest,
             "success_rate": round(harvest / hunters, 3) if hunters and harvest is not None else None,
@@ -135,12 +137,14 @@ def extract_rows(sheet_rows: list, plan: dict, source: str):
 def save(conn, rows):
     conn.executemany("""
         INSERT INTO harvest_stats (district, species, year, hunters, hunter_days, harvest,
-                                   success_rate, days_per_kill, source_file)
+                                   success_rate, days_per_kill, source_file, antlered, antlerless)
         VALUES (:district, :species, :year, :hunters, :hunter_days, :harvest,
-                :success_rate, :days_per_kill, :source_file)
+                :success_rate, :days_per_kill, :source_file, :antlered, :antlerless)
         ON CONFLICT(district, species, year) DO UPDATE SET
             hunters=excluded.hunters, hunter_days=excluded.hunter_days,
             harvest=excluded.harvest, success_rate=excluded.success_rate,
+            antlered=COALESCE(excluded.antlered, harvest_stats.antlered),
+            antlerless=COALESCE(excluded.antlerless, harvest_stats.antlerless),
             days_per_kill=excluded.days_per_kill, source_file=excluded.source_file,
             collected_at=datetime('now')
     """, rows)

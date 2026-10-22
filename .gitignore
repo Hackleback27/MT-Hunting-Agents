@@ -8,3 +8,8 @@ __pycache__/
 
 # Excel lock files
 ~$*
+
+# Big downloads that get re-fetched every year
+data/raw/regs/*.pdf
+data/raw/regs/*.txt
+data/raw/harvest/html/

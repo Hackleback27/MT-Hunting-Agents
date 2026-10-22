@@ -3,11 +3,14 @@ export_excel.py - writes the database out as an Excel workbook with charts.
 
     python export_excel.py
 
-Creates exports/Montana_Deer_Harvest.xlsx with four sheets:
-  Summary         statewide totals per year (formulas) + line chart
-  Top Districts   best-odds districts for the latest surveyed year + bar charts
+Creates exports/Montana_Hunting_Districts.xlsx with these sheets:
+  Summary         statewide totals per species and year (formulas) + line chart
+  Top Districts   best-odds districts per species for its latest surveyed year,
+                  with General / Draw status, + bar charts
   Trends          every district's harvest by year, colour-shaded, with % change
-  Data            every row from the database, as a filterable Excel table
+  Regulations     every hunting opportunity from this year's booklet
+  Black Bear      this season's bear harvest and quota status by unit
+  Data            every harvest row, as a filterable Excel table
 
 Uses openpyxl only (pure Python), so it runs even with Smart App Control on.
 """
@@ -25,8 +28,10 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 from database import connect
 
 ROOT = Path(__file__).parent
-OUT = ROOT / "exports" / "Montana_Deer_Harvest.xlsx"
-SPECIES = ["mule deer", "whitetail"]
+OUT = ROOT / "exports" / "Montana_Hunting_Districts.xlsx"
+SPECIES = ["mule deer", "whitetail", "elk", "antelope"]
+COLORS = {"mule deer": "A0522D", "whitetail": "2F5D3A", "elk": "6B4E9B", "antelope": "C08A1E"}
+MALE = {"mule deer": "Bucks", "whitetail": "Bucks", "elk": "Bulls", "antelope": "Bucks"}
 TOP_N = 25
 
 FONT = "Arial"
@@ -37,15 +42,29 @@ BODY = Font(name=FONT)
 NOTE = Font(name=FONT, italic=True, size=9, color="5D6A60")
 HEAD_FILL = PatternFill("solid", fgColor="2F5D3A")
 HEAD_FONT = Font(name=FONT, bold=True, color="FFFFFF")
+GEN_FILL = PatternFill("solid", fgColor="E2EFE2")
+DRAW_FILL = PatternFill("solid", fgColor="F8E6D6")
 
 
 def load():
     conn = connect()
-    rows = [dict(r) for r in conn.execute("""
-        SELECT district, species, year, hunters, hunter_days, harvest
-        FROM harvest_stats WHERE harvest IS NOT NULL ORDER BY species, district, year""")]
+    q = lambda sql, *a: [dict(r) for r in conn.execute(sql, a)]
+    rows = q("""SELECT district, species, year, hunters, hunter_days, harvest, antlered, antlerless
+                FROM harvest_stats WHERE harvest IS NOT NULL ORDER BY species, district, year""")
+    reg_year = q("SELECT MAX(year) AS y FROM district_access")[0]["y"]
+    access = {(r["district"], r["species"]): r for r in q("SELECT * FROM district_access WHERE year = ?", reg_year)}
+    opps = q("SELECT * FROM reg_opportunities WHERE year = ? ORDER BY species, district", reg_year)
+    bear_year = q("SELECT MAX(year) AS y FROM bear_harvest")[0]["y"]
+    bear = q("SELECT * FROM bear_harvest WHERE year = ? ORDER BY bmu", bear_year) if bear_year else []
     conn.close()
-    return rows
+    return rows, reg_year, access, opps, bear
+
+
+def access_label(access, district, species):
+    a = access.get((district, species)) or access.get((district.rstrip("NSEW"), species))
+    if not a:
+        return ""
+    return {"general": "General", "limited": "Draw"}.get(a["access"], a["access"].title())
 
 
 def header(ws, row, labels, start_col=1):
@@ -60,101 +79,113 @@ def widths(ws, sizes):
         ws.column_dimensions[col].width = w
 
 
-def data_sheet(wb, rows):
+def shade(cell, label):
+    if label == "General":
+        cell.fill = GEN_FILL
+    elif label == "Draw":
+        cell.fill = DRAW_FILL
+
+
+def data_sheet(wb, rows, access):
     ws = wb.create_sheet("Data")
-    labels = ["District", "Region", "Species", "Year", "Hunters", "Hunter days", "Harvest",
-              "Per hunter", "Days per animal"]
+    labels = ["District", "Region", "Species", "Year", "License", "Hunters", "Hunter days", "Harvest",
+              "Bucks/Bulls", "Does/Cows", "Per hunter", "Days per animal"]
     header(ws, 1, labels)
     for i, r in enumerate(rows, start=2):
-        ws.append([r["district"], int(r["district"][0]), r["species"], r["year"],
-                   r["hunters"], r["hunter_days"], r["harvest"],
-                   f'=IF(E{i}>0,G{i}/E{i},"")', f'=IF(AND(F{i}>0,G{i}>0),F{i}/G{i},"")'])
+        lab = access_label(access, r["district"], r["species"])
+        ws.append([r["district"], int(r["district"][0]), r["species"], r["year"], lab,
+                   r["hunters"], r["hunter_days"], r["harvest"], r["antlered"], r["antlerless"],
+                   f'=IF(F{i}>0,H{i}/F{i},"")', f'=IF(AND(G{i}>0,H{i}>0),G{i}/H{i},"")'])
         for c in ws[i]:
             c.font = BODY
-        ws[f"E{i}"].number_format = ws[f"F{i}"].number_format = ws[f"G{i}"].number_format = "#,##0"
-        ws[f"H{i}"].number_format = "0%"
-        ws[f"I{i}"].number_format = "0.0"
+        shade(ws[f"E{i}"], lab)
+        for col in "FGHIJ":
+            ws[f"{col}{i}"].number_format = "#,##0"
+        ws[f"K{i}"].number_format = "0%"
+        ws[f"L{i}"].number_format = "0.0"
     last = len(rows) + 1
-    tab = Table(displayName="Harvest", ref=f"A1:I{last}")
+    tab = Table(displayName="Harvest", ref=f"A1:L{last}")
     tab.tableStyleInfo = TableStyleInfo(name="TableStyleMedium7", showRowStripes=True)
     ws.add_table(tab)
     ws.freeze_panes = "A2"
-    widths(ws, {"A": 10, "B": 8, "C": 12, "D": 8, "E": 10, "F": 12, "G": 10, "H": 11, "I": 10})
+    widths(ws, {"A": 10, "B": 8, "C": 12, "D": 8, "E": 10, "F": 10, "G": 12, "H": 10, "I": 12, "J": 11, "K": 11, "L": 10})
     return last
 
 
 def summary_sheet(wb, years, last):
     ws = wb.active
     ws.title = "Summary"
-    ws["A1"] = "Montana deer harvest, statewide"
+    ws["A1"] = "Montana big game harvest, statewide"
     ws["A1"].font = H1
     ws["A2"] = "Totals are formulas over the Data sheet, so they update if you edit it."
     ws["A2"].font = NOTE
-    header(ws, 4, ["Year", "Mule deer", "Whitetail", "All deer", "Change vs prior year"])
+    header(ws, 4, ["Year"] + [s.title() for s in SPECIES])
     for i, y in enumerate(years, start=5):
         ws[f"A{i}"] = y
-        ws[f"B{i}"] = f'=SUMIFS(Data!$G$2:$G${last},Data!$C$2:$C${last},"mule deer",Data!$D$2:$D${last},A{i})'
-        ws[f"C{i}"] = f'=SUMIFS(Data!$G$2:$G${last},Data!$C$2:$C${last},"whitetail",Data!$D$2:$D${last},A{i})'
-        ws[f"D{i}"] = f"=B{i}+C{i}"
-        ws[f"E{i}"] = f'=IF(D{i - 1}>0,D{i}/D{i - 1}-1,"")' if i > 5 else "–"
-        for col in "ABCDE":
-            ws[f"{col}{i}"].font = BODY
-        for col in "BCD":
+        ws[f"A{i}"].font = BODY
+        for k, sp in enumerate(SPECIES):
+            col = get_column_letter(2 + k)
+            ws[f"{col}{i}"] = (f'=SUMIFS(Data!$H$2:$H${last},Data!$C$2:$C${last},"{sp}",'
+                               f'Data!$D$2:$D${last},$A{i})')
             ws[f"{col}{i}"].number_format = "#,##0"
-        ws[f"E{i}"].number_format = "+0%;-0%;0%"
-        ws[f"E{i}"].alignment = Alignment(horizontal="right")
+            ws[f"{col}{i}"].font = BODY
     end = 4 + len(years)
 
     chart = LineChart()
-    chart.title = "Deer harvested statewide"
+    chart.title = "Animals harvested statewide"
     chart.y_axis.title = "Animals"
     chart.y_axis.numFmt = "#,##0"
-    chart.height, chart.width = 8, 16
-    chart.add_data(Reference(ws, min_col=2, max_col=3, min_row=4, max_row=end), titles_from_data=True)
+    chart.height, chart.width = 8, 17
+    chart.add_data(Reference(ws, min_col=2, max_col=1 + len(SPECIES), min_row=4, max_row=end), titles_from_data=True)
     chart.set_categories(Reference(ws, min_col=1, min_row=5, max_row=end))
-    for s, color in zip(chart.series, ["A0522D", "2F5D3A"]):
-        s.graphicalProperties.line.solidFill = color
+    for s, sp in zip(chart.series, SPECIES):
+        s.graphicalProperties.line.solidFill = COLORS[sp]
         s.graphicalProperties.line.width = 28000
         s.smooth = False
-    ws.add_chart(chart, "G4")
+    ws.add_chart(chart, "H4")
 
-    ws[f"A{end + 2}"] = ("Source: Montana FWP harvest estimates (myfwp.mt.gov). FWP counts deer hunters per "
-                         "district, not per species. Some years (e.g. 2022, 2024) have no hunter survey.")
-    ws[f"A{end + 2}"].font = NOTE
+    notes = [
+        "Source: Montana FWP harvest estimates (myfwp.mt.gov).",
+        "Hunter numbers are surveyed every other year: deer in odd years, elk and antelope in even years.",
+        "General = buck/bull on a general license. Draw = buck/bull needs a permit or license from a drawing (lottery).",
+        "Antelope districts use their own numbering. Antelope licenses are all by drawing.",
+    ]
+    for k, n in enumerate(notes):
+        ws[f"A{end + 2 + k}"] = n
+        ws[f"A{end + 2 + k}"].font = NOTE
     widths(ws, {"A": 10, "B": 13, "C": 13, "D": 13, "E": 13})
 
 
-def top_sheet(wb, rows):
+def top_sheet(wb, rows, access):
     ws = wb.create_sheet("Top Districts")
-    surveyed = sorted({r["year"] for r in rows if r["hunters"]})
-    year = surveyed[-1]
-    ws["A1"] = f"Best-odds districts, {year}"
+    ws["A1"] = "Best-odds districts by species"
     ws["A1"].font = H1
-    ws["A2"] = (f"Ranked by harvest per deer hunter, districts with 100+ hunters. {year} is the latest year "
-                "FWP surveyed hunter numbers.")
+    ws["A2"] = ("Ranked by harvest per hunter, districts with 100+ hunters, using each species' latest surveyed year. "
+                "Draw districts usually rank high because hunter numbers are capped.")
     ws["A2"].font = NOTE
 
     col = 1
     for sp in SPECIES:
+        surveyed = sorted({r["year"] for r in rows if r["species"] == sp and r["hunters"]})
+        if not surveyed:
+            continue
+        year = surveyed[-1]
         pick = [r for r in rows if r["species"] == sp and r["year"] == year and (r["hunters"] or 0) >= 100]
         pick.sort(key=lambda r: r["harvest"] / r["hunters"], reverse=True)
         pick = pick[:TOP_N]
         c0 = get_column_letter(col)
-        ws[f"{c0}4"] = sp.title()
+        ws[f"{c0}4"] = f"{sp.title()}, {year}"
         ws[f"{c0}4"].font = H2
-        header(ws, 5, ["#", "District", "Hunters", "Harvest", "Per hunter", "Days per animal"], start_col=col)
+        header(ws, 5, ["#", "District", "License", "Hunters", "Harvest", MALE[sp], "Per hunter"], start_col=col)
         for i, r in enumerate(pick, start=6):
-            L = [get_column_letter(col + k) for k in range(6)]
-            ws[f"{L[0]}{i}"] = i - 5
-            ws[f"{L[1]}{i}"] = r["district"]
-            ws[f"{L[2]}{i}"] = r["hunters"]
-            ws[f"{L[3]}{i}"] = r["harvest"]
-            ws[f"{L[4]}{i}"] = f"={L[3]}{i}/{L[2]}{i}"
-            ws[f"{L[5]}{i}"] = r["hunter_days"] / r["harvest"] if r["hunter_days"] and r["harvest"] else None
-            for k, fmt in enumerate(["0", "@", "#,##0", "#,##0", "0%", "0.0"]):
-                ws[f"{L[k]}{i}"].number_format = fmt
-                ws[f"{L[k]}{i}"].font = BODY
-        for k, w in enumerate([5, 10, 10, 10, 11, 10]):
+            L = [get_column_letter(col + k) for k in range(7)]
+            lab = access_label(access, r["district"], sp)
+            vals = [i - 5, r["district"], lab, r["hunters"], r["harvest"], r["antlered"], f"={L[4]}{i}/{L[3]}{i}"]
+            for k, (v, fmt) in enumerate(zip(vals, ["0", "@", "@", "#,##0", "#,##0", "#,##0", "0%"])):
+                c = ws[f"{L[k]}{i}"]
+                c.value, c.number_format, c.font = v, fmt, BODY
+            shade(ws[f"{L[2]}{i}"], lab)
+        for k, w in enumerate([5, 9, 9, 9, 9, 9, 10]):
             ws.column_dimensions[get_column_letter(col + k)].width = w
 
         bar = BarChart()
@@ -165,16 +196,16 @@ def top_sheet(wb, rows):
         bar.legend = None
         bar.height, bar.width = 8, 12
         n = min(10, len(pick))
-        bar.add_data(Reference(ws, min_col=col + 4, min_row=5, max_row=5 + n), titles_from_data=True)
+        bar.add_data(Reference(ws, min_col=col + 6, min_row=5, max_row=5 + n), titles_from_data=True)
         bar.set_categories(Reference(ws, min_col=col + 1, min_row=6, max_row=5 + n))
         bar.x_axis.scaling.orientation = "maxMin"      # #1 at the top
-        bar.series[0].graphicalProperties.solidFill = "A0522D" if sp == "mule deer" else "2F5D3A"
+        bar.series[0].graphicalProperties.solidFill = COLORS[sp]
         ws.add_chart(bar, f"{c0}{8 + TOP_N}")
-        col += 7
+        col += 8
     ws.freeze_panes = "A6"
 
 
-def trends_sheet(wb, rows, years):
+def trends_sheet(wb, rows, years, access):
     ws = wb.create_sheet("Trends")
     ws["A1"] = "Harvest by district and year"
     ws["A1"].font = H1
@@ -189,13 +220,16 @@ def trends_sheet(wb, rows, years):
     for sp in SPECIES:
         ws.cell(row=row, column=1, value=sp.title()).font = H2
         row += 1
-        header(ws, row, ["District", "Region"] + [str(y) for y in years] + ["Change"])
+        header(ws, row, ["District", "License"] + [str(y) for y in years] + ["Change"])
         first = row + 1
         for district in sorted(d for s, d in table if s == sp):
             row += 1
             vals = table[(sp, district)]
             ws.cell(row=row, column=1, value=district).font = BOLD
-            ws.cell(row=row, column=2, value=int(district[0])).font = BODY
+            lab = access_label(access, district, sp)
+            c = ws.cell(row=row, column=2, value=lab)
+            c.font = BODY
+            shade(c, lab)
             for k, y in enumerate(years):
                 c = ws.cell(row=row, column=3 + k, value=vals.get(y))
                 c.number_format, c.font = "#,##0", BODY
@@ -211,23 +245,74 @@ def trends_sheet(wb, rows, years):
                                                           mid_type="num", mid_value=0, mid_color="FFFFFF",
                                                           end_type="num", end_value=0.6, end_color="9CCB9F"))
         row += 3
-    widths(ws, {"A": 10, "B": 8})
+    widths(ws, {"A": 10, "B": 10})
     for k in range(len(years) + 1):
         ws.column_dimensions[get_column_letter(3 + k)].width = 10
     ws.freeze_panes = "C4"
 
 
+def regs_sheet(wb, opps, reg_year):
+    ws = wb.create_sheet("Regulations")
+    ws["A1"] = f"{reg_year} hunting opportunities by district"
+    ws["A1"].font = H1
+    ws["A2"] = ("Read automatically from FWP's Deer, Elk & Antelope regulations booklet. "
+                "Always check the official booklet before you hunt.")
+    ws["A2"].font = NOTE
+    labels = ["District", "Species", "License", "How you get it", "Legal animal", "Archery", "General (rifle)",
+              "Muzzleloader", "Late", "Apply by", "Quota", "Details"]
+    header(ws, 4, labels)
+    how = {"general": "General license", "otc": "Over the counter", "draw": "Drawing"}
+    for i, o in enumerate(opps, start=5):
+        vals = [o["district"], o["species"], o["license"], how.get(o["how"], o["how"]), o["legal_animal"],
+                o["archery"], o["general"], o["muzzleloader"], o["late"], o["apply_by"], o["quota"], o["details"]]
+        for k, v in enumerate(vals):
+            c = ws.cell(row=i, column=1 + k, value=v)
+            c.font = BODY
+        if o["how"] == "general":
+            ws.cell(row=i, column=4).fill = GEN_FILL
+        elif o["how"] == "draw":
+            ws.cell(row=i, column=4).fill = DRAW_FILL
+    last = 4 + len(opps)
+    if opps:
+        tab = Table(displayName="Regulations", ref=f"A4:L{last}")
+        tab.tableStyleInfo = TableStyleInfo(name="TableStyleLight9", showRowStripes=True)
+        ws.add_table(tab)
+    ws.freeze_panes = "A5"
+    widths(ws, {"A": 9, "B": 11, "C": 22, "D": 16, "E": 30, "F": 15, "G": 15, "H": 14, "I": 14,
+                "J": 10, "K": 8, "L": 70})
+
+
+def bear_sheet(wb, bear):
+    ws = wb.create_sheet("Black Bear")
+    year = bear[0]["year"] if bear else ""
+    ws["A1"] = f"Black bear harvest {year}, season so far"
+    ws["A1"].font = H1
+    ws["A2"] = (f"From FWP's quota status page{', updated ' + bear[0]['updated'] if bear else ''}. "
+                "FWP doesn't publish multi-year bear harvest by district.")
+    ws["A2"].font = NOTE
+    header(ws, 4, ["BMU", "Status", "Closed on", "Bears reported", "Female harvest", "Female quota", "Total quota"])
+    for i, b in enumerate(bear, start=5):
+        for k, v in enumerate([b["bmu"], b["status"], b["closed_on"], b["harvest"], b["female_harvest"],
+                               b["female_quota"], b["total_quota"]]):
+            c = ws.cell(row=i, column=1 + k, value=v)
+            c.font = BODY
+        ws.cell(row=i, column=2).fill = DRAW_FILL if b["status"] == "CLOSED" else GEN_FILL
+    widths(ws, {"A": 16, "B": 10, "C": 12, "D": 15, "E": 15, "F": 13, "G": 12})
+
+
 def build():
-    rows = load()
+    rows, reg_year, access, opps, bear = load()
     if not rows:
-        raise SystemExit("No harvest data in hunting.db yet. Run run_all.py first.")
+        raise SystemExit("No harvest data in hunting.db yet. Run yearly_update.py first.")
     years = sorted({r["year"] for r in rows})
     wb = Workbook()
-    last = data_sheet(wb, rows)
+    last = data_sheet(wb, rows, access)
     summary_sheet(wb, years, last)
-    top_sheet(wb, rows)
-    trends_sheet(wb, rows, years)
-    wb.move_sheet("Data", offset=3)
+    top_sheet(wb, rows, access)
+    trends_sheet(wb, rows, years, access)
+    regs_sheet(wb, opps, reg_year)
+    bear_sheet(wb, bear)
+    wb.move_sheet("Data", offset=len(wb.sheetnames))
     OUT.parent.mkdir(exist_ok=True)
     wb.save(OUT)
     print(f"Saved {OUT.relative_to(ROOT)}")

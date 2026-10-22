@@ -72,6 +72,61 @@ CREATE TABLE IF NOT EXISTS conditions (
     collected_at   TEXT DEFAULT (datetime('now'))
 );
 
+-- Filled by regs_parse: every hunting opportunity in the regulations booklet.
+CREATE TABLE IF NOT EXISTS reg_opportunities (
+    district       TEXT NOT NULL,
+    species        TEXT NOT NULL,          -- 'mule deer', 'whitetail', 'elk', 'antelope'
+    year           INTEGER NOT NULL,       -- regulation year
+    license        TEXT,                   -- 'General Elk License', 'Elk Permit: 313-45', ...
+    kind           TEXT,                   -- 'general', 'b_license', 'permit', 'license'
+    how            TEXT,                   -- 'general', 'otc', 'draw'
+    legal_animal   TEXT,                   -- 'Brow-tined Bull Elk', 'Antlerless Mule Deer', ...
+    apply_by       TEXT,
+    quota          TEXT,
+    early          TEXT,
+    archery        TEXT,                   -- season dates, e.g. 'Sep 05-Oct 18'
+    general        TEXT,
+    muzzleloader   TEXT,
+    late           TEXT,
+    details        TEXT
+);
+
+-- Filled by regs_parse: is the buck/bull general-license or drawing-only?
+CREATE TABLE IF NOT EXISTS district_access (
+    district       TEXT NOT NULL,
+    species        TEXT NOT NULL,
+    year           INTEGER NOT NULL,
+    district_name  TEXT,
+    access         TEXT,                   -- 'general', 'limited', 'antlerless only'
+    has_permits    INTEGER,                -- 1 if any permit (drawing) exists here
+    PRIMARY KEY (district, species, year)
+);
+
+-- Filled by bear_fetch: black bear harvest so far this season, by bear management unit.
+CREATE TABLE IF NOT EXISTS bear_harvest (
+    bmu            TEXT NOT NULL,
+    year           INTEGER NOT NULL,
+    season         TEXT,                   -- 'GENERAL SEASON', ...
+    status         TEXT,                   -- 'OPEN' / 'CLOSED'
+    closed_on      TEXT,
+    harvest        INTEGER,
+    female_harvest INTEGER,
+    female_quota   INTEGER,
+    total_quota    INTEGER,
+    updated        TEXT,
+    PRIMARY KEY (bmu, year, season)
+);
+
+-- Filled by bear_parse: statewide black bear seasons for the year.
+CREATE TABLE IF NOT EXISTS bear_regs (
+    year           INTEGER PRIMARY KEY,
+    spring         TEXT,
+    archery        TEXT,
+    fall           TEXT,
+    draw_bmus      TEXT,                   -- comma list of units needing a drawn permit
+    quota_bmus     TEXT                    -- comma list of units that close at a quota
+);
+
 -- Every agent logs each run here so you can see what happened.
 CREATE TABLE IF NOT EXISTS agent_runs (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,6 +144,11 @@ def connect():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    # Columns added after the first version: add them to older databases too.
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(harvest_stats)")}
+    for col in ("antlered", "antlerless"):
+        if col not in cols:
+            conn.execute(f"ALTER TABLE harvest_stats ADD COLUMN {col} INTEGER")
     return conn
 
 
