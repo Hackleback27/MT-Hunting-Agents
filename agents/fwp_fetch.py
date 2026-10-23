@@ -110,8 +110,9 @@ def download(survey: str, first: int, last: int) -> str:
     return resp.text
 
 
-def fetch(first_year: int = 2021, last_year: int | None = None) -> Path:
-    """Download every species for first_year..this year. New years appear by themselves."""
+def fetch(first_year: int = 2004, last_year: int | None = None) -> Path:
+    """Download every species for first_year..this year (FWP's online estimates start in 2004).
+    New years appear by themselves."""
     last_year = last_year or date.today().year
     (OUT_DIR / "html").mkdir(parents=True, exist_ok=True)
     rows = []

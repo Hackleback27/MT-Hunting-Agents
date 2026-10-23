@@ -1,10 +1,9 @@
-"""One-time helper: downloads the raw FWP files (harvest + regulations) so Claude can build the parsers.
-In VS Code, click the Run button (triangle, top right). Safe to delete afterwards."""
+"""One-time helper: downloads raw FWP files so Claude can build and test. Safe to delete afterwards."""
 from agents.fwp_fetch import fetch as fetch_harvest
-from agents.regs_fetch import fetch as fetch_regs
+from agents.gis_fetch import fetch as fetch_gis
 
-print("Downloading FWP harvest estimates...")
+print("Downloading FWP harvest estimates (2004 to now)...")
 fetch_harvest()
-print("Downloading FWP regulations...")
-fetch_regs()
+print("Downloading district boundaries...")
+fetch_gis()
 print("\nAll done. Tell Claude it finished.")

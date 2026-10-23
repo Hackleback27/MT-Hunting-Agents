@@ -11,6 +11,8 @@ What goes into the page:
   - this year's regulations per district: general vs drawing, and every
     hunting opportunity (license, legal animal, season dates)
   - black bear harvest so far this season by bear management unit
+  - district boundaries (data/gis/) and biology research (data/biology/biology.json)
+    for the Biology tab
 No server needed: the result is one static HTML file.
 """
 
@@ -53,12 +55,19 @@ def build():
     bear_regs = (q("SELECT * FROM bear_regs WHERE year = ?", bear_year) or [None])[0] if bear_year else None
     conn.close()
 
+    gis = {}
+    for f in sorted((ROOT / "data" / "gis").glob("*.geojson")):
+        gis[f.stem] = json.loads(f.read_text(encoding="utf-8"))
+    bio_file = ROOT / "data" / "biology" / "biology.json"
+    bio = json.loads(bio_file.read_text(encoding="utf-8")) if bio_file.exists() else None
+
     data = {
         "built": date.today().isoformat(),
         "harvest": harvest,
         "years": sorted({r[2] for r in harvest}),
         "regYear": reg_year, "access": access, "opps": opps,
         "bear": {"year": bear_year, "units": bear, "regs": bear_regs},
+        "gis": gis, "bio": bio,
     }
     html = TEMPLATE.read_text(encoding="utf-8")
     # "</" is escaped so the data can never close the <script> tag early.
@@ -69,7 +78,8 @@ def build():
     (OUT.parent / ".nojekyll").touch()   # tells GitHub Pages to serve the file as-is
     print(f"Built {OUT.relative_to(ROOT)}  ({len(harvest):,} harvest rows, "
           f"{sum(len(v) for d in opps.values() for v in d.values()):,} regulation rows, "
-          f"{len(bear)} bear units, {OUT.stat().st_size / 1024:.0f} KB)")
+          f"{len(bear)} bear units, {len(gis)} maps, biology {'yes' if bio else 'no'}, "
+          f"{OUT.stat().st_size / 1024:.0f} KB)")
 
 
 if __name__ == "__main__":

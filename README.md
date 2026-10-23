@@ -23,6 +23,8 @@ the site.
 | `agents/regs_fetch.py` | Script: downloads the regulations booklet and bear quota page |
 | `agents/regs_parse.py` | Script: reads the booklet into general/draw status and hunting opportunities |
 | `agents/bear_parse.py` | Script: loads black bear harvest so far and season dates |
+| `agents/gis_fetch.py` | Script: downloads hunting district boundaries for the Biology map |
+| `data/biology/biology.json` | Biologist research (surveys, recruitment, winters) with sources, compiled by Claude's research team. Not refreshed by the yearly update: ask Claude to re-run the research when you want it updated |
 | `agents/harvest_agent.py` | Agent: uses Claude to map any harvest file's columns, then saves rows |
 | `agents/llm.py` | Shared helper for asking Claude for JSON |
 | `database.py` | The shared SQLite database every agent writes into |

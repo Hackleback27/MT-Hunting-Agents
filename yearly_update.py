@@ -8,7 +8,8 @@ or double-click yearly_update.bat.
 
 The Hunting Team, in order:
   1. fwp_fetch      downloads deer, elk and antelope harvest estimates
-  2. regs_fetch     downloads the regulations booklet and the bear quota page
+  2. regs_fetch     downloads the regulations booklet and the bear quota page,
+     gis_fetch      and hunting district boundaries for the map
   3. harvest_agent  loads harvest files into hunting.db (asks Claude to map
                     any file it doesn't recognise)
   4. regs_parse     reads the booklet: general vs draw, legal animals, dates
@@ -46,9 +47,14 @@ step(1, "Downloading harvest estimates from FWP")
 from agents.fwp_fetch import fetch as fetch_harvest   # noqa: E402
 fetch_harvest()
 
-step(2, "Downloading regulations and bear quota status")
+step(2, "Downloading regulations, bear quota status and district maps")
 from agents.regs_fetch import fetch as fetch_regs     # noqa: E402
 fetch_regs()
+from agents.gis_fetch import fetch as fetch_gis       # noqa: E402
+try:
+    fetch_gis()
+except Exception as e:                                # the map is nice-to-have; don't stop the update
+    print(f"  district boundaries not updated ({e}); keeping last year's")
 
 step(3, "Loading harvest into the database (harvest agent)")
 from agents.harvest_agent import run as run_harvest   # noqa: E402

@@ -95,27 +95,107 @@
   .regs-detail .opps { margin-left: 0; }
   footer { margin-top: 32px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
   footer a { color: var(--accent); }
+
+  /* ---------- hero: mountains, photo, trend ---------- */
+  :root { --sky1: #cfe3ee; --sky2: #f3ead8; --m1: #9fb3bf; --m2: #6f8c7c; --m3: #3f5e49; --m4: #2a4433; --hero-ink: #1b2a20; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --sky1: #1b2633; --sky2: #2a2a33; --m1: #34404d; --m2: #2b3a33; --m3: #22322a; --m4: #18241d; --hero-ink: #eef1ea; } }
+  body { background-color: var(--bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%238a9a7f' stroke-opacity='.10'%3E%3Cpath d='M0 60c40-20 80 20 120 0s80-20 120 0'/%3E%3Cpath d='M0 120c40-20 80 20 120 0s80-20 120 0'/%3E%3Cpath d='M0 180c40-20 80 20 120 0s80-20 120 0'/%3E%3C/g%3E%3C/svg%3E"); }
+  .hero { position: relative; overflow: hidden; border-radius: 0 0 18px 18px; margin: 0 -16px 22px; padding: 22px 24px 0;
+          background: linear-gradient(180deg, var(--sky1), var(--sky2) 70%); color: var(--hero-ink); }
+  .hero svg.mtn { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 62%; pointer-events: none; }
+  .hero-inner { position: relative; display: grid; grid-template-columns: 210px 1fr 380px; gap: 22px; align-items: end; padding-bottom: 24px; }
+  @media (max-width: 1000px) { .hero-inner { grid-template-columns: 150px 1fr; } .hero .trend { grid-column: 1 / -1; } }
+  @media (max-width: 560px) { .hero-inner { grid-template-columns: 1fr; } .hero .photo { width: 100%; height: 180px; } }
+  .hero .photo { width: 210px; height: 210px; border-radius: 16px; overflow: hidden; border: 4px solid rgba(255,255,255,.85);
+                 box-shadow: 0 8px 24px rgba(0,0,0,.25); background: var(--m2); position: relative; }
+  @media (max-width: 1000px) { .hero .photo { width: 150px; height: 150px; } }
+  .hero .photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .35s; }
+  .hero .photo .credit { position: absolute; right: 6px; bottom: 4px; font-size: 9px; color: #fff; text-shadow: 0 1px 2px #000; opacity: .85; }
+  .hero h1 { color: var(--hero-ink); text-shadow: 0 1px 0 rgba(255,255,255,.25); }
+  .hero .sub { color: var(--hero-ink); opacity: .85; }
+  .hero .eyebrow { color: var(--hero-ink); opacity: .75; }
+  .hero .trend { background: rgba(255,253,248,.88); border-radius: 14px; padding: 12px 14px 6px; box-shadow: 0 8px 24px rgba(0,0,0,.18); color: #1f2a22; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero .trend { background: rgba(29,36,31,.9); color: var(--ink); } }
+  .hero .trend .k { font-size: 12px; font-weight: 600; opacity: .75; }
+  .hero .trend .v { font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 700; }
+  .hero .trend .chartbox { height: 150px; }
+  .tabs { display: flex; gap: 6px; margin: 14px 0 12px; flex-wrap: wrap; }
+  .tabs button { font: inherit; font-weight: 600; border: 0; border-radius: 999px; padding: 7px 16px; cursor: pointer;
+                 background: rgba(255,255,255,.55); color: var(--hero-ink); }
+  .tabs button[aria-selected="true"] { background: var(--m4); color: #fff; }
+  .hero .seg { background: rgba(255,253,248,.9); }
+
+  /* ---------- biology ---------- */
+  .bio-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .bio-grid { grid-template-columns: 1fr; } }
+  .mapwrap { position: relative; }
+  svg.mtmap { width: 100%; height: auto; display: block; }
+  svg.mtmap path { stroke: var(--panel); stroke-width: .6; cursor: pointer; transition: opacity .15s; }
+  svg.mtmap path:hover, svg.mtmap path.hl { stroke: var(--ink); stroke-width: 1.6; }
+  .maptip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+            padding: 8px 10px; font-size: 13px; box-shadow: 0 6px 18px rgba(0,0,0,.18); max-width: 280px; z-index: 5; }
+  .maptip b { font-size: 14px; }
+  .maptip .src { color: var(--muted); font-size: 11px; }
+  .scale { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .scale .bar { height: 10px; width: 160px; border-radius: 5px; }
+  .metric-list { list-style: none; padding: 0; margin: 0; font-size: 14px; }
+  .metric-list li { padding: 7px 0; border-top: 1px dashed var(--line); }
+  .metric-list .val { font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 18px; }
+  .findings { margin: 0; padding-left: 18px; }
+  .findings li { margin: 6px 0; }
+  sup.ref a { color: var(--accent); text-decoration: none; font-size: 11px; }
+  .sources { font-size: 13px; color: var(--muted); padding-left: 22px; }
+  .sources li { margin: 4px 0; } .sources a { color: var(--accent); word-break: break-word; }
+  .events { width: 100%; }
+  .events td { white-space: normal; text-align: left; vertical-align: top; }
+  @media (max-width: 560px) { .hero .photo { width: 100%; height: 190px; } }
+  .chip { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
   [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="eyebrow">Hunting Team · Montana FWP harvest estimates &amp; regulations</div>
-    <h1>Montana hunting districts</h1>
-    <p class="sub">Harvest, hunter numbers and effort for every district from FWP's yearly estimates, plus this year's
-      regulations: whether you can hunt it on a general license or have to draw, what you can shoot, and when.</p>
+  <header class="hero">
+    <svg class="mtn" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="var(--m1)" d="M0 170 L90 110 L160 150 L260 70 L340 130 L420 90 L520 150 L600 60 L700 140 L790 95 L880 150 L980 80 L1080 140 L1200 100 V300 H0Z"/>
+      <path fill="var(--m2)" d="M0 210 L120 150 L210 190 L300 130 L400 200 L470 160 L560 205 L660 140 L760 200 L860 160 L960 210 L1060 150 L1200 195 V300 H0Z"/>
+      <path fill="var(--m3)" d="M0 250 L80 225 L150 245 L240 205 L330 245 L430 220 L520 255 L640 215 L760 250 L880 222 L990 252 L1100 225 L1200 245 V300 H0Z"/>
+      <g fill="var(--m4)">
+        <path d="M0 300 V268 C150 255 300 280 450 268 S750 255 900 270 S1100 262 1200 268 V300Z"/>
+        <path d="M60 268 l10 -34 l10 34z M78 270 l8 -26 l8 26z M300 272 l11 -38 l11 38z M318 274 l8 -26 l8 26z M720 266 l10 -34 l10 34z M738 268 l7 -24 l7 24z M1040 268 l11 -36 l11 36z M1060 270 l8 -26 l8 26z"/>
+      </g>
+    </svg>
+    <div class="hero-inner">
+      <div class="photo"><img id="sp-photo" alt=""><span class="credit" id="sp-credit"></span></div>
+      <div>
+        <div class="eyebrow">Hunting Team · Montana FWP data &amp; research</div>
+        <h1>Montana hunting districts</h1>
+        <p class="sub">Harvest, hunter numbers and effort for every district from FWP's yearly estimates, this year's
+          regulations, and what biologists are finding about Montana's herds.</p>
+        <div class="tabs" role="tablist">
+          <button role="tab" data-tab="districts" aria-selected="true">Hunting districts</button>
+          <button role="tab" data-tab="biology" aria-selected="false">Biology</button>
+        </div>
+        <div class="seg" id="species">
+          <button data-v="mule deer" aria-pressed="true">Mule deer</button>
+          <button data-v="whitetail" aria-pressed="false">Whitetail</button>
+          <button data-v="elk" aria-pressed="false">Elk</button>
+          <button data-v="antelope" aria-pressed="false">Antelope</button>
+          <button data-v="bear" aria-pressed="false">Black bear</button>
+        </div>
+      </div>
+      <div class="trend">
+        <div class="k" id="trend-k">Taken statewide by year</div>
+        <div class="v" id="trend-v"></div>
+        <div class="chartbox"><canvas id="tchart"></canvas></div>
+      </div>
+    </div>
   </header>
 
+  <main id="tab-districts">
   <div class="controls">
-    <div class="ctl"><label>Species</label>
-      <div class="seg" id="species">
-        <button data-v="mule deer" aria-pressed="true">Mule deer</button>
-        <button data-v="whitetail" aria-pressed="false">Whitetail</button>
-        <button data-v="elk" aria-pressed="false">Elk</button>
-        <button data-v="antelope" aria-pressed="false">Antelope</button>
-        <button data-v="bear" aria-pressed="false">Black bear</button>
-      </div></div>
     <div class="ctl harvest-only"><label for="year">Year</label><select id="year"></select></div>
     <div class="ctl harvest-only"><label for="sort">Rank districts by</label>
       <select id="sort">
@@ -123,7 +203,7 @@
         <option value="daysPer">Fewest days per animal</option>
         <option value="antlered">Most bucks / bulls taken</option>
         <option value="harvest">Most animals taken</option>
-        <option value="trend">Rising harvest (first vs latest year)</option>
+        <option value="trend">Rising harvest (last 5 years)</option>
         <option value="hunter_days">Busiest (hunter days)</option>
       </select></div>
     <div class="ctl"><label for="access">License</label>
@@ -178,12 +258,58 @@
     </div>
   </div>
 
+  </main>
+
+  <main id="tab-biology" hidden>
+    <div class="cards" id="bio-cards"></div>
+    <div class="bio-grid">
+      <section class="panel">
+        <h2 id="map-title">Map</h2>
+        <p class="hint" id="map-hint"></p>
+        <div class="controls" style="margin-bottom:8px">
+          <div class="ctl"><label for="map-metric">Color districts by</label><select id="map-metric"></select></div>
+        </div>
+        <div class="mapwrap"><svg class="mtmap" id="mtmap"></svg><div class="maptip" id="maptip" hidden></div></div>
+        <div class="scale" id="map-scale"></div>
+      </section>
+      <div class="stack">
+        <section class="panel">
+          <h2 id="area-title">Hover a district</h2>
+          <p class="hint" id="area-hint">Move over the map (or tap on a phone) to see survey numbers for that district.</p>
+          <ul class="metric-list" id="area-metrics"></ul>
+        </section>
+        <section class="panel">
+          <h2>Population trend</h2>
+          <p class="hint" id="bio-trend-hint"></p>
+          <div class="chartbox"><canvas id="bchart"></canvas></div>
+        </section>
+      </div>
+    </div>
+    <section class="panel section" style="margin-top:16px">
+      <h2>What biologists are finding</h2>
+      <p class="hint" id="bio-summary"></p>
+      <ul class="findings" id="bio-findings"></ul>
+    </section>
+    <section class="panel section">
+      <h2>Winters, drought and disease</h2>
+      <p class="hint">Events that hit Montana's herds, and what FWP did about licenses afterwards.</p>
+      <div class="tablewrap"><table class="events"><thead><tr><th class="l">When</th><th class="l">Where</th><th class="l">What happened</th></tr></thead>
+        <tbody id="bio-events"></tbody></table></div>
+    </section>
+    <section class="panel section">
+      <h2>Sources</h2>
+      <p class="hint" id="bio-asof"></p>
+      <ol class="sources" id="bio-sources"></ol>
+    </section>
+  </main>
+
   <footer>
     Sources: Montana Fish, Wildlife &amp; Parks harvest estimates (myfwp.mt.gov), the <span id="regyear"></span>
     Deer, Elk &amp; Antelope regulations booklet, and FWP's black bear quota status page.
     FWP counts deer hunters per district, not per species, so for deer "per hunter" means animals of that species per deer hunter.
     Hunter numbers are surveyed every other year (deer in odd years, elk and antelope in even years); other years show harvest only.
     Antelope districts have their own numbering. Regulations are summarized automatically. Always check the official booklet before you hunt.
+    Animal photos: public domain, from Wikimedia Commons (National Park Service, U.S. Fish &amp; Wildlife Service).
     Built <span id="built"></span>.
   </footer>
 </div>
@@ -247,7 +373,7 @@ function oppHtml(o, withDetails = true) {
 // Opportunities worth showing first: buck/bull and either-sex on general licenses, then permits, then the rest.
 function rankOpps(list) {
   const w = o => (o[3].startsWith("Antlerless") || o[3].startsWith("Doe") ? 2 : 0) + (o[0] === "general" ? 0 : o[0] === "permit" || o[0] === "license" ? 1 : 3)
-                 + (/only youth|pthfv/i.test(o[11] || "") ? 4 : 0);
+                 + (/only youth|pthfv/i.test(o[11] || "") ? 4 : 0) + (/ArchEquip only/i.test(o[11] || "") ? 0.5 : 0);
   return list.slice().sort((a, b) => w(a) - w(b));
 }
 
@@ -269,9 +395,17 @@ function fillRegions() {
 }
 document.querySelectorAll("#species button").forEach(b => b.onclick = () => {
   document.querySelectorAll("#species button").forEach(x => x.setAttribute("aria-pressed", x === b));
-  state.species = b.dataset.v; state.district = null;
+  state.species = b.dataset.v; state.district = null; state.mapMetric = null;
   if (state.species !== "bear") fillYears();
   fillRegions(); render();
+});
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  state.tab = b.dataset.tab;
+  $("tab-districts").hidden = state.tab !== "districts";
+  $("tab-biology").hidden = state.tab !== "biology";
+  try { history.replaceState(null, "", "#" + state.tab); } catch (e) {}
+  render();
 });
 $("year").onchange = e => { state.year = +e.target.value; render(); };
 $("sort").onchange = e => { state.sort = e.target.value; render(); };
@@ -279,10 +413,13 @@ $("access").onchange = e => { state.access = e.target.value; state.district = nu
 $("region").onchange = e => { state.region = e.target.value; state.district = null; render(); };
 $("minh").onchange = e => { state.minh = +e.target.value; render(); };
 
+const TREND_YEARS = 5;   // compare the latest year with 5 years earlier
 function trendFor(district, species) {
   const s = H.filter(r => r.district === district && r.species === species).sort((a, b) => a.year - b.year);
-  if (s.length < 2 || !s[0].harvest) return null;
-  return (s[s.length - 1].harvest - s[0].harvest) / s[0].harvest;
+  if (s.length < 2) return null;
+  const last = s[s.length - 1], first = s.find(r => r.year >= last.year - TREND_YEARS) || s[0];
+  if (!first.harvest || first === last) return null;
+  return (last.harvest - first.harvest) / first.harvest;
 }
 function arrow(t) {
   if (t == null) return "–";
@@ -295,6 +432,8 @@ function arrow(t) {
 let dChart, sChart;
 function render() {
   const bear = state.species === "bear";
+  renderHero();
+  if (state.tab === "biology") { renderBiology(); return; }
   document.querySelectorAll(".harvest-only").forEach(el => el.hidden = bear);
   bear ? renderBear() : renderHarvest();
 }
@@ -331,8 +470,11 @@ function renderHarvest() {
       <div class="v">${fmt(tot)}</div><div class="d">${chg == null ? "&nbsp;" : arrow(chg) + " vs " + (state.year - 1)}</div></div>
     <div class="card"><div class="k">${MALE[sp]} in that harvest</div><div class="v">${fmt(males)}</div>
       <div class="d">${tot ? pct(males / tot) + " of animals taken" : "&nbsp;"}</div></div>
-    <div class="card"><div class="k">Districts, ${D.regYear} regulations</div><div class="v">${nGen} <span class="badge b-general">General</span></div>
-      <div class="d">${nDraw} more are draw-only for ${MALE[sp]}</div></div>`;
+    ${sp === "antelope"
+      ? `<div class="card"><div class="k">Districts, ${D.regYear} regulations</div><div class="v">${nDraw} <span class="badge b-draw">Draw</span></div>
+         <div class="d">Every antelope license in Montana is drawn</div></div>`
+      : `<div class="card"><div class="k">Districts, ${D.regYear} regulations</div><div class="v">${nGen} <span class="badge b-general">General</span></div>
+         <div class="d">${nDraw} more are draw-only for ${MALE[sp]}</div></div>`}`;
 
   // top 10
   const sortLabel = $("sort").selectedOptions[0].text.replace(/ \(.*\)/, "").toLowerCase();
@@ -365,7 +507,7 @@ function renderHarvest() {
   const shownRows = list.slice(0, 40);
   $("tablehint").textContent = `${NICE[sp]}, ${state.year}. Showing ${shownRows.length} of ${list.length} districts. Tap a row for details.`;
   $("thead").innerHTML = `<tr><th class="l">#</th><th class="l">District</th><th class="l">License</th><th>Hunters</th><th>Harvest</th>
-    <th>${MALE[sp][0].toUpperCase() + MALE[sp].slice(1)}</th><th>Per hunter</th><th>Since ${D.years[0]}</th></tr>`;
+    <th>${MALE[sp][0].toUpperCase() + MALE[sp].slice(1)}</th><th>Per hunter</th><th>5-yr trend</th></tr>`;
   $("rows").innerHTML = shownRows.map((r, i) => `
     <tr class="click ${r.district === state.district ? "sel" : ""}" data-d="${esc(r.district)}">
       <td class="l rank">${i + 1}</td><td class="l"><strong>${esc(r.district)}</strong><span class="dname">${esc(districtName(sp, r.district))}</span></td>
@@ -463,6 +605,226 @@ function drawState() {
     data: { labels: D.years, datasets: splitSeries(r => !state.region || region(r.district) === state.region) }, options: chartOpts(true) });
 }
 
+// ---------- hero: photo + statewide trend ----------
+const PHOTOS = {
+  "mule deer": ["https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Mule_deer_buck_%2823448106099%29.jpg/640px-Mule_deer_buck_%2823448106099%29.jpg", "Mule deer buck · NPS / Yellowstone", "50% 40%"],
+  whitetail: ["https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Adult_white_tailed_deer_buck_odocoileus_virginianus.jpg/640px-Adult_white_tailed_deer_buck_odocoileus_virginianus.jpg", "Whitetail buck · USFWS", "50% 35%"],
+  elk: ["https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Bull_elk_bugling%2C_Mammoth_Hot_Springs_%2826095965298%29.jpg/640px-Bull_elk_bugling%2C_Mammoth_Hot_Springs_%2826095965298%29.jpg", "Bull elk · NPS / Yellowstone", "45% 45%"],
+  antelope: ["https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Pronghorn_Buck_Seedskadee_NWR_4_%2812896055254%29.jpg/640px-Pronghorn_Buck_Seedskadee_NWR_4_%2812896055254%29.jpg", "Pronghorn buck · USFWS", "50% 30%"],
+  bear: ["https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/American_black_bear_ursus_americanus.jpg/640px-American_black_bear_ursus_americanus.jpg", "Black bear · public domain", "50% 30%"],
+};
+let tChart, bChart;
+function statewideSeries(sp) {
+  if (sp === "bear") {
+    const t = ((D.bio || {}).species || {}).bear?.harvest;
+    return t ? {labels: t.points.map(p => p[0]), values: t.points.map(p => p[1]), note: t.label} : null;
+  }
+  const ys = [...new Set(H.filter(r => r.species === sp).map(r => r.year))].sort((a, b) => a - b);
+  return {labels: ys, values: ys.map(y => H.filter(r => r.species === sp && r.year === y).reduce((a, r) => a + r.harvest, 0)),
+          males: ys.map(y => H.filter(r => r.species === sp && r.year === y).reduce((a, r) => a + (r.antlered || 0), 0))};
+}
+function renderHero() {
+  const sp = state.species, ph = PHOTOS[sp], img = $("sp-photo");
+  if (img.dataset.sp !== sp) {
+    img.style.opacity = 0;
+    setTimeout(() => { img.src = ph[0]; img.alt = ph[1]; img.style.objectPosition = ph[2]; img.dataset.sp = sp; }, 150);
+    img.onload = () => img.style.opacity = 1;
+    $("sp-credit").textContent = ph[1];
+  }
+  const ser = statewideSeries(sp);
+  $("trend-k").textContent = `${NICE[sp]} taken statewide, by year`;
+  tChart?.destroy();
+  if (!ser || !ser.values.length) {
+    $("trend-v").textContent = "No multi-year data yet";
+    return;
+  }
+  const n = ser.values.length, first = ser.values[0], last = ser.values[n - 1];
+  const ch = first ? (last - first) / first : null;
+  $("trend-v").innerHTML = `${fmt(last)} in ${ser.labels[n - 1]} ${ch == null ? "" : `<span style="font-size:14px">${arrow(ch)} vs ${ser.labels[0]}</span>`}`;
+  if (!window.Chart) return;
+  const sets = [{label: "All taken", data: ser.values, borderColor: css("--s1"), backgroundColor: css("--s1"), borderWidth: 2.5, pointRadius: 2, tension: .25}];
+  if (ser.males) sets.push({label: MALE[sp][0].toUpperCase() + MALE[sp].slice(1), data: ser.males, borderColor: css("--s2"), backgroundColor: css("--s2"), borderWidth: 1.5, pointRadius: 0, tension: .25});
+  const o = chartOpts(false);
+  o.plugins.legend.labels.boxWidth = 10; o.scales.x.ticks = {maxTicksLimit: 8};
+  tChart = new Chart($("tchart"), {type: "line", data: {labels: ser.labels, datasets: sets}, options: o});
+}
+
+// ---------- biology tab ----------
+const GEO_FOR = {"mule deer": "deer_elk", whitetail: "deer_elk", elk: "deer_elk", antelope: "antelope", bear: "bear"};
+const UNIT_WORD = {"mule deer": "district", whitetail: "district", elk: "district", antelope: "antelope district", bear: "bear unit"};
+const bio = () => (((D.bio || {}).species || {})[state.species]) || {};
+const srcById = id => ((D.bio || {}).sources || []).find(s => s.id === id);
+const refs = ids => (ids || []).map(id => srcById(id) ? `<sup class="ref"><a href="#src-${id}">[${id}]</a></sup>` : "").join("");
+const baseId = d => String(d).replace(/\s*\(.*\)$/, "");
+
+// harvest-based layer every species has
+function harvestByArea(sp) {
+  const out = {};
+  if (sp === "bear") {
+    (D.bear.units || []).forEach(u => { const k = baseId(u.bmu); out[k] = (out[k] || 0) + (u.harvest || 0); });
+    return {values: out, label: `Bears reported, ${D.bear.year} season so far`, year: D.bear.year};
+  }
+  const y = Math.max(...H.filter(r => r.species === sp).map(r => r.year));
+  H.filter(r => r.species === sp && r.year === y).forEach(r => {
+    const k = r.district.replace(/[A-Z]+$/, ""); out[k] = (out[k] || 0) + r.harvest; });
+  return {values: out, label: `${NICE[sp]} taken in ${y} (FWP harvest estimate)`, year: y};
+}
+// research metrics for the species: { metricKey: {label, unit, byArea: {id: rec}, byRegion: {n: rec}} } using the latest year
+function researchLayers(sp) {
+  const L = {};
+  (bio().metrics || []).forEach(m => {
+    const k = m.metric;
+    L[k] = L[k] || {label: m.label || k, unit: m.unit || "", byArea: {}, byRegion: {}, statewide: null};
+    const slot = m.scope === "region" ? L[k].byRegion : (m.scope === "statewide" ? null : L[k].byArea);
+    if (slot) {
+      for (const id of String(m.area).split(/[,;]\s*/)) {
+        const key = baseId(id);
+        if (!slot[key] || slot[key].year < m.year) slot[key] = m;
+      }
+    } else if (!L[k].statewide || L[k].statewide.year < m.year) L[k].statewide = m;
+  });
+  return L;
+}
+function fillMapMetrics() {
+  const sel = $("map-metric"), L = researchLayers(state.species);
+  sel.innerHTML = "";
+  sel.add(new Option(harvestByArea(state.species).label, "__harvest"));
+  Object.entries(L).forEach(([k, v]) => {
+    const n = Object.keys(v.byArea).length, r = Object.keys(v.byRegion).length;
+    if (n || r) sel.add(new Option(`${v.label} · research (${n ? n + " " + UNIT_WORD[state.species] + "s" : r + " regions"})`, k));
+  });
+  if (!state.mapMetric || ![...sel.options].some(o => o.value === state.mapMetric))
+    state.mapMetric = sel.options.length > 1 ? sel.options[1].value : "__harvest";
+  sel.value = state.mapMetric;
+}
+$("map-metric").onchange = e => { state.mapMetric = e.target.value; renderBiology(); };
+
+function project(features) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const k = Math.cos(47 * Math.PI / 180);
+  const pt = ([lon, lat]) => [lon * k, -lat];
+  const walk = (g, f) => g.type === "Polygon" ? g.coordinates.forEach(r => r.forEach(f))
+                       : g.coordinates.forEach(p => p.forEach(r => r.forEach(f)));
+  features.forEach(ft => walk(ft.geometry, c => { const [x, y] = pt(c); minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }));
+  const W = 1000, sc = W / (maxX - minX), Hh = (maxY - minY) * sc;
+  const P = c => { const [x, y] = pt(c); return ((x - minX) * sc).toFixed(1) + "," + ((y - minY) * sc).toFixed(1); };
+  const ring = r => "M" + r.map(P).join("L") + "Z";
+  const path = g => g.type === "Polygon" ? g.coordinates.map(ring).join("") : g.coordinates.map(p => p.map(ring).join("")).join("");
+  return {W, H: Hh, path};
+}
+const RAMP = ["#e6efe0", "#bcd6b4", "#8fbc88", "#5e9c6a", "#357a4b", "#1f5735"];
+function colorFor(v, breaks) { if (v == null) return null; let i = 0; while (i < breaks.length && v > breaks[i]) i++; return RAMP[Math.min(i, RAMP.length - 1)]; }
+
+function areaInfoHtml(sp, id) {
+  const L = researchLayers(sp), hv = harvestByArea(sp), region = String(id)[0];
+  const name = sp === "bear" ? "" : districtName(sp, id);
+  const rows = [];
+  rows.push(`<li><span class="val">${fmt(hv.values[id])}</span> <span class="nm">${esc(hv.label)}</span></li>`);
+  for (const [k, v] of Object.entries(L)) {
+    const m = v.byArea[id];
+    if (m) rows.push(`<li><span class="val">${fmt(m.value)}${m.unit === "%" ? "%" : ""}</span> ${esc(v.label)}, ${esc(m.year)}${m.area_name ? ` <span class="nm">(${esc(m.area_name)})</span>` : ""}${refs([m.ref])}</li>`);
+  }
+  for (const [k, v] of Object.entries(L)) {
+    const m = v.byRegion[region];
+    if (m && !v.byArea[id]) rows.push(`<li><span class="val">${fmt(m.value)}${m.unit === "%" ? "%" : ""}</span> ${esc(v.label)}, Region ${region}, ${esc(m.year)}${refs([m.ref])}</li>`);
+  }
+  const notes = (bio().areaNotes || {})[id];
+  if (notes) rows.push(`<li>${esc(notes.text)}${refs(notes.refs)}</li>`);
+  return {title: `${sp === "bear" ? "BMU" : sp === "antelope" ? "Antelope HD" : "HD"} ${esc(id)}`, name, rows: rows.join("")};
+}
+
+function renderBiology() {
+  const sp = state.species, B = bio();
+  fillMapMetrics();
+  const geo = (D.gis || {})[GEO_FOR[sp]];
+  $("map-title").textContent = `${NICE[sp]} by ${UNIT_WORD[sp]}`;
+  const L = researchLayers(sp), hv = harvestByArea(sp);
+  let values = {}, label, unit = "";
+  if (state.mapMetric === "__harvest") { values = hv.values; label = hv.label; }
+  else {
+    const layer = L[state.mapMetric]; label = layer.label; unit = layer.unit;
+    const ids = geo ? geo.features.map(f => baseId(f.properties.district)) : [];
+    ids.forEach(id => { const m = layer.byArea[id] || layer.byRegion[id[0]]; if (m) values[id] = m.value; });
+  }
+  $("map-hint").textContent = state.mapMetric === "__harvest"
+    ? "Darker = more animals taken. Switch the menu to see biologist survey numbers where they exist."
+    : `Darker = higher. Districts without their own survey use their FWP region's figure when one exists. Gray = no published survey found.`;
+
+  // cards: statewide research numbers
+  const sw = Object.values(L).map(v => v.statewide).filter(Boolean).sort((a, b) => b.year - a.year).slice(0, 3);
+  $("bio-cards").innerHTML = sw.length ? sw.map(m => `<div class="card"><div class="k">${esc(m.label)}, statewide</div>
+      <div class="v">${fmt(m.value)}${m.unit === "%" ? "%" : ""}</div><div class="d">${esc(m.year)} ${refs([m.ref])}</div></div>`).join("")
+    : `<div class="card"><div class="k">Biology research</div><div class="d">No statewide survey figures collected for ${NICE[sp].toLowerCase()} yet.</div></div>`;
+
+  // map
+  const svg = $("mtmap"), tip = $("maptip");
+  if (!geo) { svg.innerHTML = ""; $("map-scale").textContent = "District boundaries haven't been downloaded yet."; }
+  else {
+    const pr = project(geo.features);
+    svg.setAttribute("viewBox", `0 0 ${pr.W} ${pr.H.toFixed(0)}`);
+    const vals = Object.values(values).filter(v => v != null).sort((a, b) => a - b);
+    const q = f => vals.length ? vals[Math.min(vals.length - 1, Math.floor(f * vals.length))] : 0;
+    const breaks = [q(.2), q(.4), q(.6), q(.8), q(.95)];
+    svg.innerHTML = geo.features.map(f => {
+      const id = baseId(f.properties.district);
+      const c = colorFor(values[id], breaks) || css("--line");
+      return `<path data-id="${esc(id)}" d="${pr.path(f.geometry)}" fill="${c}"/>`;
+    }).join("");
+    $("map-scale").innerHTML = vals.length ? `<span>${fmt(vals[0])}${unit === "%" ? "%" : ""}</span><span class="bar" style="background:linear-gradient(90deg,${RAMP.join(",")})"></span>
+      <span>${fmt(vals[vals.length - 1])}${unit === "%" ? "%" : ""}</span><span>· ${esc(label)}</span>` : "";
+    const show = (el, ev) => {
+      svg.querySelectorAll("path.hl").forEach(p => p.classList.remove("hl")); el.classList.add("hl");
+      const info = areaInfoHtml(sp, el.dataset.id);
+      $("area-title").textContent = info.title + (info.name ? " · " + info.name : "");
+      $("area-hint").textContent = "";
+      $("area-metrics").innerHTML = info.rows;
+      if (ev) {
+        const box = svg.parentElement.getBoundingClientRect();
+        tip.hidden = false;
+        tip.innerHTML = `<b>${info.title}</b>${info.name ? `<div class="nm">${esc(info.name)}</div>` : ""}<ul class="metric-list">${info.rows}</ul>`;
+        const x = ev.clientX - box.left, y = ev.clientY - box.top;
+        tip.style.left = Math.min(x + 14, box.width - 290) + "px"; tip.style.top = (y + 14) + "px";
+      }
+    };
+    svg.querySelectorAll("path").forEach(p => {
+      p.onmousemove = ev => show(p, ev);
+      p.onclick = ev => show(p, null);
+      p.onmouseleave = () => { tip.hidden = true; };
+    });
+  }
+
+  // trend chart
+  bChart?.destroy();
+  const tr = B.trend && B.trend.points && B.trend.points.length >= 4 ? B.trend : null;
+  $("bio-trend-hint").innerHTML = tr ? `${esc(tr.label)} ${refs(tr.refs)}`
+    : (B.trend ? `Only ${B.trend.points.length} survey years published (${B.trend.points.map(p => p[0] + ": " + fmt(p[1])).join(", ")})${refs(B.trend.refs)}, so this shows statewide harvest instead.`
+               : "No published population series found; showing statewide harvest instead.");
+  const ser = tr ? {labels: tr.points.map(p => p[0]), values: tr.points.map(p => p[1])} : statewideSeries(sp);
+  if (window.Chart && ser) {
+    const o = chartOpts(false); o.plugins.legend.display = false;
+    bChart = new Chart($("bchart"), {type: "line", data: {labels: ser.labels, datasets: [{data: ser.values, borderColor: css("--s2"), backgroundColor: css("--s2"), borderWidth: 2.5, pointRadius: 3, tension: .25, spanGaps: true}]}, options: o});
+  }
+
+  // findings, events, sources
+  $("bio-summary").innerHTML = B.summary ? esc(B.summary) : "";
+  $("bio-findings").innerHTML = (B.findings || []).map(f => `<li>${esc(f.text)}${refs(f.refs)}</li>`).join("") || "<li>No research collected yet.</li>";
+  const ev = ((D.bio || {}).events || []).filter(e => (e.species || []).includes(sp) || (e.species || []).includes("all"));
+  $("bio-events").innerHTML = ev.map(e => `<tr><td class="l"><strong>${esc(e.when)}</strong></td><td class="l">${esc(e.region || "")}</td>
+     <td class="l">${esc(e.text)}${refs(e.refs)}</td></tr>`).join("") || `<tr><td class="l" colspan="3">No events recorded for this species.</td></tr>`;
+  const used = new Set();
+  const collect = ids => (ids || []).forEach(i => used.add(i));
+  (B.metrics || []).forEach(m => collect([m.ref])); (B.findings || []).forEach(f => collect(f.refs)); ev.forEach(e => collect(e.refs));
+  if (B.trend) collect(B.trend.refs);
+  Object.values(B.areaNotes || {}).forEach(n => collect(n.refs));
+  if (B.harvest) collect(B.harvest.refs);
+  const list = ((D.bio || {}).sources || []).filter(s => used.has(s.id));
+  $("bio-sources").innerHTML = list.map(s => `<li id="src-${s.id}" value="${s.id}">${esc(s.publisher ? s.publisher + ". " : "")}${esc(s.title)}${s.year ? " (" + esc(s.year) + ")" : ""}.
+     ${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a>` : ""}</li>`).join("") || "<li>None yet.</li>";
+  $("bio-asof").textContent = D.bio && D.bio.asOf ? `Research compiled ${D.bio.asOf}. Numbers are as published by each source; survey methods differ between regions.` : "";
+}
+
+state.tab = location.hash === "#biology" ? "biology" : "districts";
+if (state.tab === "biology") { document.querySelector('.tabs button[data-tab="biology"]').click(); }
 fillYears(); fillRegions(); render();
 </script>
 </body>
